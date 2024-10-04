@@ -14,7 +14,6 @@ if(builder.Environment.IsDevelopment())
 }
 else
 {
-
 builder.Services.AddDbContext<MyDatabaseContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("AZURE_MYSQL_CONNECTIONSTRING"), 
     ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("AZURE_MYSQL_CONNECTIONSTRING"))));
@@ -25,6 +24,7 @@ builder.Services.AddDbContext<MyDatabaseContext>(options =>
     options.InstanceName = "SampleInstance";
     });
 }
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
