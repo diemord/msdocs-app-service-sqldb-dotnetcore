@@ -29,6 +29,9 @@ jobs:
       
       - name: Install dotnet ef
         run: dotnet tool install -g dotnet-ef --version 8.*
+        
+      - name: Add dotnet tools to PATH
+        run: echo 'export PATH="$PATH:/home/runner/.dotnet/tools"' >> $GITHUB_ENV
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
