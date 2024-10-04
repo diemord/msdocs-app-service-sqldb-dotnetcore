@@ -1,17 +1,17 @@
 #!/bin/bash
-dacpac="false"
 sqlfiles="false"
-SApassword=$1
-dacpath=$2
-sqlpath=$3
+DBpassword=$1
+sqlpath=$2
 
-echo "SELECT * FROM SYS.DATABASES" | dd of=testsqlconnection.sql
+echo "SHOW DATABASES;" | dd of=testsqlconnection.sql
+
+# Перевірка готовності MySQL сервера
 for i in {1..60};
 do
-    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $SApassword -d master -i testsqlconnection.sql > /dev/null
+    mysql --host=localhost --user=root --password=$DBpassword < testsqlconnection.sql > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-        echo "SQL server ready"
+        echo "MySQL server ready"
         break
     else
         echo "Not ready yet..."
@@ -20,47 +20,28 @@ do
 done
 rm testsqlconnection.sql
 
-for f in $dacpath/*
-do
-    if [ $f == $dacpath/*".dacpac" ]
-    then
-        dacpac="true"
-        echo "Found dacpac $f"
-    fi
-done
-
+# Перевірка наявності SQL файлів
 for f in $sqlpath/*
 do
-    if [ $f == $sqlpath/*".sql" ]
+    if [[ $f == *.sql ]]
     then
         sqlfiles="true"
         echo "Found SQL file $f"
     fi
 done
 
+# Виконання SQL файлів
 if [ $sqlfiles == "true" ]
 then
     for f in $sqlpath/*
     do
-        if [ $f == $sqlpath/*".sql" ]
+        if [[ $f == *.sql ]]
         then
             echo "Executing $f"
-            /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $SApassword -d master -i $f
+            mysql --host=localhost --user=root --password=$DBpassword < $f
         fi
     done
 fi
 
-if [ $dacpac == "true" ] 
-then
-    for f in $dacpath/*
-    do
-        if [ $f == $dacpath/*".dacpac" ]
-        then
-            dbname=$(basename $f ".dacpac")
-            echo "Deploying dacpac $f"
-            /opt/sqlpackage/sqlpackage /Action:Publish /SourceFile:$f /TargetTrustServerCertificate:True /TargetServerName:db /TargetDatabaseName:$dbname /TargetUser:sa /TargetPassword:$SApassword
-        fi
-    done
-fi
-
+# Встановлення EF Core tools (для MySQL)
 dotnet tool install --global dotnet-ef --version 8.*
