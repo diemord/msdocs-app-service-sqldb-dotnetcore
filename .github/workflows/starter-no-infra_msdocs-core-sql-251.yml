@@ -27,11 +27,8 @@ jobs:
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
       
-      - name: Install dotnent ef
+      - name: Install dotnet ef
         run: dotnet tool install -g dotnet-ef --version 8.*
-
-      - name: Create migrations bundle
-        run: dotnet ef migrations bundle --runtime linux-x64 -o ${{env.DOTNET_ROOT}}/myapp/migrationsbundle
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -46,20 +43,20 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_51D86218CD4D4604837212E972787ABD }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A108E1B3006F4E788B4EF21229227DE6 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BD429600548C4E328B201129A4D31BFF }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -68,4 +65,9 @@ jobs:
           app-name: 'msdocs-core-sql-251'
           slot-name: 'Production'
           package: .
-          
+
+      - name: Apply database migrations
+        run: |
+          dotnet ef database update --no-build --configuration Release
+        env:
+          AZURE_MYSQL_CONNECTIONSTRING: ${{ secrets.AZURE_MYSQL_CONNECTIONSTRING }}
