@@ -16,7 +16,9 @@ else
 {
 builder.Services.AddDbContext<MyDatabaseContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("AZURE_MYSQL_CONNECTIONSTRING"), 
-    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("AZURE_MYSQL_CONNECTIONSTRING"))));
+    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("AZURE_MYSQL_CONNECTIONSTRING")))
+    .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
+    );
 
     builder.Services.AddStackExchangeRedisCache(options =>
     {
